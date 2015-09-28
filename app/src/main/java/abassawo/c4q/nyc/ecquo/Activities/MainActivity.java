@@ -82,6 +82,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Bind(R.id.fab_redo)
     FloatingActionButton fabRedo;
+    Task redoTask;
+
+    private SimpleCardStackAdapter adapter;
 
     private FragmentManager fragMan;
     private  SQLiteDatabase  db;
@@ -271,7 +274,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     public void setupDayStacks(CardContainer decK) {
         Drawable defaultDrawable = getResources().getDrawable(R.drawable.c4qlogo);
-        final SimpleCardStackAdapter adapter = new SimpleCardStackAdapter(this); //ADAPTER FOR POPULATING DECK LIST.
+        adapter = new SimpleCardStackAdapter(this); //ADAPTER FOR POPULATING DECK LIST.
 
         //TODO - Sort list before populating deck.
         deck.setOrientation(Orientations.Orientation.Disordered); //ORIENTATION ORDER. PRIOR TO THIS, SORT THE LIST APPROPRIATELY
@@ -333,7 +336,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     iterTask.getLabel(),
                     getResources().getDrawable(R.drawable.c4qlogo));
 
-
+            redoTask = new Task(todayList.get(i).getTitle(), getApplicationContext());
+            redoTask.setLabel(todayList.get(i).getLabel());
 
             card.setOnCardDimissedListener(new CardModel.OnCardDimissedListener() {
                 final View coordinatorLayoutView = findViewById(R.id.main_content);
@@ -489,6 +493,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.fab_redo:
                 Toast.makeText(MainActivity.this, "redo button clicked", Toast.LENGTH_SHORT).show();
                 //todo: write redo code here!
+                todayList.add(redoTask);
+                adapter.notifyDataSetChanged();
                 break;
         }
 
@@ -562,8 +568,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
         return false;
     }
-
-
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
