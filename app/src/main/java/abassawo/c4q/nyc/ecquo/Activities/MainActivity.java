@@ -1,22 +1,16 @@
 package abassawo.c4q.nyc.ecquo.Activities;
 
 
-import android.accounts.Account;
-import android.accounts.AccountManager;
-import android.content.ContentResolver;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.BitmapRegionDecoder;
-import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
+import android.os.Bundle;
+import android.os.Handler;
 import android.preference.PreferenceManager;
-import android.provider.ContactsContract;
 import android.provider.MediaStore;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
@@ -26,7 +20,6 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.support.v7.widget.CardView;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
@@ -35,11 +28,12 @@ import android.view.DragEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.AbsListView;
 import android.widget.AdapterView;
 import android.widget.TextView;
 import android.widget.Toast;
-
 
 import com.andtinder.model.CardModel;
 import com.andtinder.model.Orientations;
@@ -56,7 +50,6 @@ import com.mikepenz.materialdrawer.model.ProfileSettingDrawerItem;
 import com.mikepenz.materialdrawer.model.interfaces.IDrawerItem;
 import com.mikepenz.materialdrawer.model.interfaces.IProfile;
 
-
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -66,15 +59,12 @@ import java.util.List;
 
 import abassawo.c4q.nyc.ecquo.Model.DBHelper;
 import abassawo.c4q.nyc.ecquo.Model.EmailFetcher;
+import abassawo.c4q.nyc.ecquo.Model.Task;
 import abassawo.c4q.nyc.ecquo.Model.User;
 import abassawo.c4q.nyc.ecquo.Model.sPlanner;
-import abassawo.c4q.nyc.ecquo.Model.Task;
 import abassawo.c4q.nyc.ecquo.R;
 import butterknife.Bind;
 import butterknife.ButterKnife;
-import nl.qbusict.cupboard.QueryResultIterable;
-
-import static nl.qbusict.cupboard.CupboardFactory.cupboard;
 
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener, AbsListView.OnScrollListener, AbsListView.OnItemClickListener, AdapterView.OnItemLongClickListener {
@@ -89,6 +79,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     CardView emptyLayout;
     @Bind(R.id.drawer_view)
     DrawerLayout mDrawerLayout;
+
+    @Bind(R.id.fab_redo)
+    FloatingActionButton fabRedo;
+
     private FragmentManager fragMan;
     private  SQLiteDatabase  db;
     boolean firstRun;
@@ -109,6 +103,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private ActionBarDrawerToggle mDrawerToggle;
     @Bind(R.id.deck1) CardContainer deck;
+
+
+
+
 
     public void initDB(){
         DBHelper dbHelper = new DBHelper(this);
@@ -271,8 +269,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
 
-
-
     public void setupDayStacks(CardContainer decK) {
         Drawable defaultDrawable = getResources().getDrawable(R.drawable.c4qlogo);
         final SimpleCardStackAdapter adapter = new SimpleCardStackAdapter(this); //ADAPTER FOR POPULATING DECK LIST.
@@ -349,8 +345,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         Snackbar
                                 .make(coordinatorLayoutView, "Task dismissed for later", Snackbar.LENGTH_SHORT)
                                 .show();
+                    //todo:set redo button to Visible HERE. (possible to have it fade out after 5 seconds?
+                        final Animation animFadeOut = AnimationUtils.loadAnimation(getApplicationContext(), android.R.anim.fade_out);
+                        Animation animFadeIn = AnimationUtils.loadAnimation(getApplicationContext(), android.R.anim.fade_in);
 
+                        fabRedo.setAnimation(animFadeIn);
+                        fabRedo.setVisibility(View.VISIBLE);
+                        fabRedo.setClickable(true);
 
+                        new Handler().postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                fabRedo.setAnimation(animFadeOut);
+                                fabRedo.setVisibility(View.INVISIBLE);
+                                fabRedo.setClickable(false);
+                            }
+                        }, 5000);
 
                 }
 
@@ -359,6 +369,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     Snackbar
                             .make(coordinatorLayoutView, "Good Job, Keep up the good work", Snackbar.LENGTH_LONG)
                             .show();
+                    //todo:set redo Button to Visible HERE. (possible to have it fade out after 5 seconds?
+                    final Animation animFadeOut = AnimationUtils.loadAnimation(getApplicationContext(), android.R.anim.fade_out);
+                    Animation animFadeIn = AnimationUtils.loadAnimation(getApplicationContext(), android.R.anim.fade_in);
+
+                    fabRedo.setAnimation(animFadeIn);
+                    fabRedo.setVisibility(View.VISIBLE);
+                    fabRedo.setClickable(true);
+
+                    new Handler().postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            fabRedo.setAnimation(animFadeOut);
+                            fabRedo.setVisibility(View.INVISIBLE);
+                            fabRedo.setClickable(false);
+                        }
+                    }, 5000);
                 }
             });
 
@@ -393,12 +419,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         });
 
     }
-
-
-
-
-
-
 
     private void initState() {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
@@ -465,6 +485,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.fabGraph:
                 Toast.makeText(getApplicationContext(), "Personalized Results Coming Soon", Toast.LENGTH_SHORT).show();
                 //startActivity(new Intent(MainActivity.this, StatsActivity.class));
+                break;
+            case R.id.fab_redo:
+                Toast.makeText(MainActivity.this, "redo button clicked", Toast.LENGTH_SHORT).show();
+                //todo: write redo code here!
                 break;
         }
 
